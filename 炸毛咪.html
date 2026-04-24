@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>🐱 喵喵加密文案簿 Pro · 隔字加密版 🐾</title>
+    <style>
+        /* 全局淡黄色可爱主题 */
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', 'Noto Sans CJK SC', sans-serif;
+            background-color: #FFFDE7;
+            color: #5D4037;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        #bg-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-cat {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            opacity: 0.12;
+            transition: all 0.1s ease;
+        }
+
+        /* 主体内容容器 - 加宽 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 245, 0.94);
+            backdrop-filter: blur(1px);
+            padding: 30px;
+            border-radius: 32px;
+            box-shadow: 0 12px 28px rgba(255, 167, 38, 0.12);
+            border: 3px dashed #FFE0B2;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            text-align: center;
+            color: #F57C00;
+            font-size: 2.2rem;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            border: 2px solid #FFCC80;
+            border-radius: 20px;
+            padding: 14px 16px;
+            font-size: 16px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s;
+            resize: vertical;
+            color: #4E342E;
+            background-color: #FFFFFF;
+        }
+        textarea:focus, input[type="text"]:focus {
+            border-color: #FFA726;
+            box-shadow: 0 0 0 3px rgba(255, 167, 38, 0.2);
+        }
+
+        .note-input {
+            border-color: #BCAAA4;
+            background-color: #faf7f2;
+            color: #4E342E;
+        }
+        .note-input:focus {
+            border-color: #8D6E63;
+            box-shadow: 0 0 0 3px rgba(141, 110, 99, 0.15);
+        }
+
+        button {
+            background-color: #FFA726;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(255, 167, 38, 0.3);
+        }
+        button:hover { background-color: #FB8C00; transform: translateY(-1px); }
+        button:active { transform: translateY(1px); }
+
+        .btn-small { padding: 5px 14px; font-size: 0.8rem; }
+        .btn-edit { background-color: #4DB6AC; box-shadow: 0 2px 6px rgba(77, 182, 172, 0.3); }
+        .btn-delete { background-color: #E57373; box-shadow: 0 2px 6px rgba(229, 115, 115, 0.3); }
+        .btn-view { background-color: #64B5F6; box-shadow: 0 2px 6px rgba(100, 181, 246, 0.3); }
+        .btn-brown { background-color: #8D6E63; box-shadow: 0 2px 6px rgba(141, 110, 99, 0.25); }
+        .btn-brown:hover { background-color: #6D4C41; }
+
+        /* 双栏布局 */
+        .dual-pane {
+            display: flex;
+            gap: 20px;
+            margin-top: 8px;
+            align-items: stretch;
+            flex-wrap: wrap;
+        }
+        .pane-left { flex: 3; min-width: 0; }
+        .pane-right { flex: 2; min-width: 200px; display: flex; flex-direction: column; }
+
+        .output-wrapper {
+            margin-top: 28px;
+            background: #FFF8E1;
+            padding: 20px;
+            border-radius: 24px;
+            border: 2px solid #FFE0B2;
+        }
+        .output-title {
+            font-weight: bold;
+            color: #F57C00;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .output-area {
+            font-size: 18px;
+            word-break: break-word;
+            background: #FFFFFF;
+            padding: 18px;
+            border-radius: 20px;
+            border: 1px solid #FFECB3;
+            min-height: 160px;
+            line-height: 1.65;
+        }
+        
+        /* 加密段落样式 + 横线交互 */
+        .encrypt-para {
+            margin: 0 0 12px 0;
+            text-align: justify;
+            line-height: 1.75;
+            border-radius: 8px;
+            transition: background 0.1s;
+        }
+        .encrypt-para .secret-text {
+            border-bottom: 2px solid #8D6E63;
+            color: transparent;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .encrypt-para.revealed-paragraph .secret-text {
+            color: #8D6E63;
+            border-bottom-color: #FFB74D;
+            font-weight: 700;
+        }
+        strong {
+            color: #BF6F00;
+            font-weight: 700;
+        }
+
+        /* 历史记录区 */
+        .records-section { margin-top: 48px; }
+        .search-bar { display: flex; gap: 12px; margin-bottom: 24px; align-items: center; flex-wrap: wrap;}
+        .search-bar input { flex: 1; min-width: 180px; }
+        
+        .record-card {
+            background: #FFFFF2;
+            border-radius: 28px;
+            padding: 22px;
+            margin-bottom: 24px;
+            border: 1px solid #FFE0B2;
+            border-left: 6px solid #FFA726;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+        .record-card:hover { box-shadow: 0 8px 20px rgba(255, 167, 38, 0.12); transform: translateY(-2px); }
+        
+        .record-text-preview {
+            color: #5D4037;
+            font-size: 15px;
+        }
+        .clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            max-height: 4.8em;
+        }
+        .expand-btn {
+            background: none;
+            border: none;
+            color: #FF8C42;
+            box-shadow: none;
+            padding: 4px 0;
+            margin-top: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .expand-btn:hover { background: none; color: #E65100; text-decoration: underline; transform: none; }
+
+        .record-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+        .edit-area { width: 100%; min-height: 110px; margin-bottom: 10px; border-radius: 18px; }
+        .hidden { display: none !important; }
+
+        .control-bar {
+            margin-top: 16px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        @media (max-width: 720px) {
+            .container { padding: 20px; }
+            .dual-pane { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="bg-container"></div>
+
+<div class="container">
+    <h1>🐾 喵喵加密文案簿 Pro 🐱<span style="font-size: 0.7rem;">✦ 隔字加密 ✦</span></h1>
+    
+    <div style="margin-bottom: 20px;">
+        <textarea id="mainInput" rows="4" placeholder="🐟 粘贴中文段落，标点符号不参与计数，每间隔一个汉字加密一次~ 试试看！"></textarea>
+        <div style="text-align: right; margin-top: 12px;">
+            <button onclick="handleEncryptAndSave()">✨ 生成并保存记录 🐟</button>
+        </div>
+    </div>
+
+    <div class="output-wrapper">
+        <div class="output-title">
+            <span>🔍 当前加密展示 <span style="font-size:0.85rem;">(横线区域点击即解密段落)</span></span>
+            <span id="currentNoteLabel" style="font-size: 13px; color: #8D6E63; background: #FFEFD0; padding: 4px 12px; border-radius: 40px;"></span>
+        </div>
+        
+        <div class="dual-pane">
+            <div class="pane-left">
+                <div id="outputArea" class="output-area">
+                    <span style="color: #BCAAA4; font-size: 14px;">✨ 暂无展示，请在上方输入或点击下方记录 ✨</span>
+                </div>
+            </div>
+            <div class="pane-right">
+                <textarea id="mainNote" class="note-input" style="height: 100%; min-height: 150px;" placeholder="📝 灵感笔记 / 备注 (会随当前记录自动保存)" oninput="syncMainNote()"></textarea>
+            </div>
+        </div>
+
+        <div class="control-bar" id="mainControlBar">
+            <button class="btn-small btn-brown" onclick="toggleAllInRange('outputArea', true)">👁️ 一键展示原文</button>
+            <button class="btn-small" onclick="toggleAllInRange('outputArea', false)">🔒 一键全部加密</button>
+        </div>
+    </div>
+
+    <div class="records-section">
+        <h3 style="color: #F57C00; display: flex; align-items: center; gap: 8px;">📚 历史猫毛记录簿 🐈</h3>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="🔍 搜索记录 (标题 / 笔记内容)" oninput="filterRecords()">
+            <button onclick="showRandomRecord()" style="white-space: nowrap;">🎲 随机翻牌</button>
+        </div>
+        
+        <div id="recordsContainer"></div>
+    </div>
+</div>
+
+<script>
+    // ---------- 1. 逗趣背景猫咪 ----------
+    const catColors = ['#F4C2A2', '#FCE4C3', '#E0F0EA', '#FFD9B5', '#FADADD', '#DCD3FF', '#C9E4DE', '#FFF2CC', '#F9E6CF', '#FFD966'];
+    function initBackgroundCats() {
+        const container = document.getElementById('bg-container');
+        container.innerHTML = '';
+        for(let i=0; i<24; i++) {
+            let div = document.createElement('div');
+            div.className = 'bg-cat';
+            div.innerHTML = `<svg viewBox="0 0 100 100" width="80" height="80"><ellipse cx="50" cy="55" rx="38" ry="30" fill="${catColors[i%10]}" stroke="#5D4037" stroke-width="1.8"/><circle cx="32" cy="44" r="4" fill="#3E2723"/><circle cx="68" cy="44" r="4" fill="#3E2723"/><path d="M 44 58 Q 50 65 56 58" stroke="#6D4C41" fill="none" stroke-width="2"/><path d="M20 30 L12 20 L24 26 Z" fill="#BC9A6C"/><path d="M80 30 L88 20 L76 26 Z" fill="#BC9A6C"/></svg>`;
+            div.style.left = Math.random() * 90 + 'vw';
+            div.style.top = Math.random() * 90 + 'vh';
+            div.style.transform = `rotate(${Math.random() * 360}deg) scale(${0.4 + Math.random() * 0.8})`;
+            container.appendChild(div);
+        }
+    }
+    window.onload = () => { initBackgroundCats(); filterRecords(); };
+
+    // ---------- 2. 存储与数据 ----------
+    let records = JSON.parse(localStorage.getItem('meowRecordsPro')) || [];
+    let currentViewId = null;
+
+    function escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    // ---------- 核心加密逻辑 (每隔一个汉字加密，标点符号/数字/英文等不计入“字”) ----------
+    // 判断是否为汉字 (基础CJK统一汉字)
+    function isChineseCharacter(ch) {
+        return /[\u4e00-\u9fff\u3400-\u4dbf\u{20000}-\u{2a6df}]/u.test(ch);
+    }
+
+    /**
+     * 对单个段落进行隔字加密：
+     * - 只对汉字字符进行计数，标点符号、数字、英文字母、空格等原样保留，不计入“字数”
+     * - 从第一个汉字开始作为“明文”（加粗），第二个汉字加密（带secret-text），第三个明文，第四个加密……（交替）
+     * - 每个加密汉字包裹可点击的 .secret-text，点击可切换父段落解密状态
+     */
+    function processAlternateEncryption(paragraphText) {
+        if (!paragraphText) return '';
+        let result = '';
+        let chineseCounter = 0;   // 只统计汉字
+        
+        for (let i = 0; i < paragraphText.length; i++) {
+            const ch = paragraphText[i];
+            const isHan = isChineseCharacter(ch);
+            
+            if (isHan) {
+                chineseCounter++;          // 汉字计数 +1
+                const escapedChar = escapeHtml(ch);
+                // 奇数位(1,3,5…)显示明文(加粗)，偶数位(2,4,6…)加密横线模式
+                if (chineseCounter % 2 === 1) {
+                    // 明文加粗，视觉可读
+                    result += `<strong>${escapedChar}</strong>`;
+                } else {
+                    // 加密字符: 带 secret-text 样式，点击触发段落解密
+                    result += `<span class="secret-text" onclick="this.closest('.encrypt-para').classList.toggle('revealed-paragraph'); event.stopPropagation();" title="🐾 点击显示/隐藏加密内容">${escapedChar}</span>`;
+                }
+            } else {
+                // 非汉字（标点、数字、英文、空格、换行等）直接原样输出，不参与计数，也不加密
+                result += escapeHtml(ch);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 生成最终加密HTML
+     * 按 \n 分割成段落，每个段落独立包裹在 .encrypt-para 中
+     */
+    function generateEncryptedHTML(originalText) {
+        if (!originalText || originalText.trim() === '') return '<span style="color:#ccc;">（无内容）</span>';
+        const paragraphs = originalText.split(/\r?\n/);
+        let htmlBuffer = '';
+        
+        for (let para of paragraphs) {
+            // 空行保留占位
+            if (para.trim() === '') {
+                htmlBuffer += '<p class="encrypt-para" style="min-height:1.2em;"></p>';
+                continue;
+            }
+            const processedPara = processAlternateEncryption(para);
+            htmlBuffer += `<p class="encrypt-para">${processedPara}</p>`;
+        }
+        return htmlBuffer;
+    }
+
+    // ---------- 3. 记录操作 ----------
+    function handleEncryptAndSave() {
+        const text = document.getElementById('mainInput').value.trim();
+        if(!text) {
+            alert("🐱 喵~ 先输入一点中文段落再加密保存吧！");
+            return;
+        }
+        const newRecord = { id: Date.now(), text: text, note: "" };
+        records.unshift(newRecord);
+        saveToStorage();
+        document.getElementById('mainInput').value = ''; 
+        filterRecords();            // 刷新列表
+        viewRecord(newRecord.id);   // 自动在主屏展示
+    }
+
+    function saveToStorage() {
+        localStorage.setItem('meowRecordsPro', JSON.stringify(records));
+    }
+
+    function viewRecord(id) {
+        const record = records.find(r => r.id === id);
+        if(record) {
+            currentViewId = id;
+            const outputArea = document.getElementById('outputArea');
+            outputArea.innerHTML = generateEncryptedHTML(record.text);
+            document.getElementById('mainNote').value = record.note || "";
+            const timeLabel = new Date(id).toLocaleString();
+            document.getElementById('currentNoteLabel').innerHTML = `📌 记录 #${timeLabel}`;
+            // 平滑滚动
+            document.querySelector('.output-wrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function syncMainNote() {
+        if(!currentViewId) return;
+        const recordIndex = records.findIndex(r => r.id === currentViewId);
+        if(recordIndex !== -1) {
+            records[recordIndex].note = document.getElementById('mainNote').value;
+            saveToStorage();
+            // 同时更新列表中的笔记显示（如果存在对应卡片内的textarea）
+            const listNoteArea = document.getElementById(`list-note-${currentViewId}`);
+            if(listNoteArea) listNoteArea.value = records[recordIndex].note;
+        }
+    }
+
+    // 展示随机记录
+    function showRandomRecord() {
+        if(records.length === 0) return alert("🐾 记录簿空空如也，先添加一条吧～");
+        const rand = records[Math.floor(Math.random() * records.length)];
+        viewRecord(rand.id);
+    }
+
+    // ---------- 4. 记录列表渲染 (支持隔字加密预览) ----------
+    function filterRecords() {
+        const keyword = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = records.filter(r => r.text.toLowerCase().includes(keyword) || (r.note && r.note.toLowerCase().includes(keyword)));
+        renderRecordsList(filtered);
+    }
+
+    function renderRecordsList(list) {
+        const container = document.getElementById('recordsContainer');
+        if(list.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:#A1887F; padding: 32px;">🐈 没有记录，快在上方添加吧~</div>';
+            return;
+        }
+        container.innerHTML = '';
+        list.forEach(record => {
+            const card = document.createElement('div');
+            card.className = 'record-card';
+            card.id = `card-${record.id}`;
+            // 生成加密预览html (使用同样隔字规则)
+            const previewHtml = generateEncryptedHTML(record.text);
+            
+            card.innerHTML = `
+                <div class="dual-pane">
+                    <div class="pane-left">
+                        <div class="record-text-preview clamp-3" id="preview-${record.id}">
+                            ${previewHtml}
+                        </div>
+                        <button class="expand-btn hidden" id="expand-btn-${record.id}" onclick="toggleExpand(${record.id})">🔽 展开全文</button>
+                    </div>
+                    <div class="pane-right">
+                        <textarea id="list-note-${record.id}" class="note-input" style="height:95px" placeholder="随文备忘..." oninput="updateNote(${record.id}, this.value)">${escapeHtml(record.note || "")}</textarea>
+                    </div>
+                </div>
+                
+                <div class="control-bar">
+                    <button class="btn-small btn-brown" onclick="toggleAllInRange('preview-${record.id}', true)">👁️ 显</button>
+                    <button class="btn-small" onclick="toggleAllInRange('preview-${record.id}', false)">🔒 藏</button>
+                    <div style="flex:1"></div>
+                    <button class="btn-small btn-view" onclick="viewRecord(${record.id})">⬆️ 主屏查看</button>
+                    <button class="btn-small btn-edit" onclick="startEdit(${record.id})">✏️ 改原文</button>
+                    <button class="btn-small btn-delete" onclick="deleteRecord(${record.id})">🗑️ 丢弃</button>
+                </div>
+
+                <div id="edit-box-${record.id}" class="hidden" style="margin-top:16px">
+                    <textarea id="edit-text-${record.id}" class="edit-area" rows="3">${escapeHtml(record.text)}</textarea>
+                    <button class="btn-small" onclick="saveEdit(${record.id})">✅ 保存</button>
+                    <button class="btn-small btn-delete" onclick="cancelEdit(${record.id})">❌ 取消</button>
+                </div>
+            `;
+            container.appendChild(card);
+            
+            // 检测是否需要展开按钮
+            setTimeout(() => {
+                const previewDiv = document.getElementById(`preview-${record.id}`);
+                if(previewDiv && (previewDiv.scrollHeight > previewDiv.clientHeight + 8)) {
+                    const btn = document.getElementById(`expand-btn-${record.id}`);
+                    if(btn) btn.classList.remove('hidden');
+                }
+            }, 20);
+        });
+    }
+    
+    // 工具函数: 一键显示/隐藏某个区域内的所有段落加密状态
+    function toggleAllInRange(containerId, show) {
+        const container = document.getElementById(containerId);
+        if(!container) return;
+        const paras = container.querySelectorAll('.encrypt-para');
+        paras.forEach(p => {
+            if(show) p.classList.add('revealed-paragraph');
+            else p.classList.remove('revealed-paragraph');
+        });
+    }
+    
+    function toggleExpand(id) {
+        const el = document.getElementById(`preview-${id}`);
+        const btn = document.getElementById(`expand-btn-${id}`);
+        if(!el || !btn) return;
+        const isClamped = el.classList.contains('clamp-3');
+        el.classList.toggle('clamp-3');
+        btn.innerText = isClamped ? '🔼 收起全文' : '🔽 展开全文';
+    }
+    
+    function updateNote(id, val) {
+        const record = records.find(r => r.id === id);
+        if(record) {
+            record.note = val;
+            saveToStorage();
+            if(currentViewId === id) document.getElementById('mainNote').value = val;
+        }
+    }
+    
+    function startEdit(id) {
+        const editBox = document.getElementById(`edit-box-${id}`);
+        const previewParent = document.getElementById(`preview-${id}`)?.parentElement?.parentElement;
+        if(editBox) editBox.classList.remove('hidden');
+        if(previewParent) previewParent.classList.add('hidden');
+        // 隐藏原有预览区间让编辑界面显现, 但不可改变卡片布局, 简单隐藏预览区所在pane-left内容
+        const paneLeft = document.getElementById(`preview-${id}`)?.closest('.pane-left');
+        if(paneLeft) paneLeft.style.opacity = '0.4';
+        // 更好的做法：disable预览透明但保留编辑框，无伤大雅
+    }
+    
+    function cancelEdit(id) {
+        // 刷新列表复位
+        filterRecords();
+        // 如果当前查看的是正在编辑的id，需要同步主屏显示
+        if(currentViewId === id) {
+            const record = records.find(r => r.id === id);
+            if(record) document.getElementById('outputArea').innerHTML = generateEncryptedHTML(record.text);
+        }
+    }
+    
+    function saveEdit(id) {
+        const newText = document.getElementById(`edit-text-${id}`).value;
+        if(!newText.trim()) {
+            alert("原文不能为空喵～");
+            return;
+        }
+        const recordIdx = records.findIndex(r => r.id === id);
+        if(recordIdx !== -1) {
+            records[recordIdx].text = newText;
+            saveToStorage();
+            // 如果正在主屏显示这条记录, 同步刷新主屏展示
+            if(currentViewId === id) {
+                document.getElementById('outputArea').innerHTML = generateEncryptedHTML(newText);
+                // 笔记不同步变动，但保留原有笔记
+                const noteValue = records[recordIdx].note || "";
+                document.getElementById('mainNote').value = noteValue;
+            }
+            filterRecords();   // 刷新列表, 编辑状态重置
+        }
+    }
+    
+    function deleteRecord(id) {
+        if(confirm("🐾 确定要丢掉这条猫毛笔记吗？")) {
+            records = records.filter(r => r.id !== id);
+            saveToStorage();
+            if(currentViewId === id) {
+                currentViewId = null;
+                document.getElementById('outputArea').innerHTML = '<span style="color:#BCAAA4;">（记录已删除）</span>';
+                document.getElementById('mainNote').value = '';
+                document.getElementById('currentNoteLabel').innerHTML = '';
+            }
+            filterRecords();
+        }
+    }
+    
+    // 辅助全局挂载函数（使按钮onclick可访问）
+    window.handleEncryptAndSave = handleEncryptAndSave;
+    window.viewRecord = viewRecord;
+    window.syncMainNote = syncMainNote;
+    window.filterRecords = filterRecords;
+    window.showRandomRecord = showRandomRecord;
+    window.toggleAllInRange = toggleAllInRange;
+    window.toggleExpand = toggleExpand;
+    window.updateNote = updateNote;
+    window.startEdit = startEdit;
+    window.cancelEdit = cancelEdit;
+    window.saveEdit = saveEdit;
+    window.deleteRecord = deleteRecord;
+    
+    // 初始化加载列表
+    filterRecords();
+</script>
+</body>
+</html>
